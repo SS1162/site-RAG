@@ -93,3 +93,28 @@ def test_list_removal_candidates(make_uow: UowFactory, clock: FakeClock) -> None
         discover(uow, "/a", run2.run_id)
         candidates = uow.pages.list_removal_candidates(run2.run_id)
     assert [p.url_id for p in candidates] == [b.url_id]
+
+
+def test_mark_methods_record_details(make_uow: UowFactory) -> None:
+    with make_uow() as uow:
+        run = start_run(uow)
+        a, b, c, d = (discover(uow, p, run.run_id) for p in ("/a", "/b", "/c", "/d"))
+        uow.pages.mark_removed(a.url_id, run.run_id, {"reason": "out_of_scope"})
+        uow.pages.mark_redirected(b.url_id, d.url_id, run.run_id, {"http_status": 301})
+        uow.pages.mark_duplicate(c.url_id, d.url_id, run.run_id, {"by": "hash"})
+        details = [e.details for e in uow.events.list(run.run_id)]
+    assert details == [
+        {"reason": "out_of_scope"},
+        {"target": d.url_id, "http_status": 301},
+        {"of": d.url_id, "by": "hash"},
+    ]
+
+
+def test_skipped_is_inactive_and_pending_unindex(make_uow: UowFactory) -> None:
+    with make_uow() as uow:
+        run = start_run(uow)
+        page = discover(uow, "/a", run.run_id)
+        uow.pages.update(replace(page, status=PageStatus.SKIPPED))
+        uow.receipts.upsert(page.url_id, "index", "h", "1", run.run_id)
+        assert uow.pages.count_active() == 0
+        assert [p.url_id for p in uow.pages.list_pending_unindex()] == [page.url_id]

@@ -27,6 +27,11 @@ def upgrade(db_path: Path, revision: str = "head") -> None:
     command.upgrade(alembic_config(db_path), revision)
 
 
+def downgrade(db_path: Path, revision: str) -> None:
+    """Revert migrations down to ``revision``."""
+    command.downgrade(alembic_config(db_path), revision)
+
+
 def check(db_path: Path) -> None:
     """Raise if the database schema differs from the ORM models (``alembic check``)."""
     command.check(alembic_config(db_path))

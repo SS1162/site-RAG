@@ -259,30 +259,41 @@ class SqlAlchemyPageRepository:
         _add_event(self._session, self._clock, run_id, url_id, event, details=details)
         return page_to_domain(model)
 
-    def mark_removed(self, url_id: str, run_id: str) -> Page:
+    def mark_removed(
+        self, url_id: str, run_id: str, details: dict[str, Any] | None = None
+    ) -> Page:
         """Mark a page removed. Chunks and receipts stay until the unindex step."""
         return self._mark(
-            url_id, run_id, EventType.REMOVED, status=PageStatus.REMOVED, removed_at=self._clock()
+            url_id,
+            run_id,
+            EventType.REMOVED,
+            details,
+            status=PageStatus.REMOVED,
+            removed_at=self._clock(),
         )
 
-    def mark_redirected(self, url_id: str, target_url_id: str, run_id: str) -> Page:
+    def mark_redirected(
+        self, url_id: str, target_url_id: str, run_id: str, details: dict[str, Any] | None = None
+    ) -> Page:
         """Mark a page as redirecting to ``target_url_id``."""
         return self._mark(
             url_id,
             run_id,
             EventType.REDIRECTED,
-            {"target": target_url_id},
+            {"target": target_url_id, **(details or {})},
             status=PageStatus.REDIRECTED,
             redirected_to=target_url_id,
         )
 
-    def mark_duplicate(self, url_id: str, of_url_id: str, run_id: str) -> Page:
+    def mark_duplicate(
+        self, url_id: str, of_url_id: str, run_id: str, details: dict[str, Any] | None = None
+    ) -> Page:
         """Mark a page as a duplicate of ``of_url_id``."""
         return self._mark(
             url_id,
             run_id,
             EventType.DUPLICATE,
-            {"of": of_url_id},
+            {"of": of_url_id, **(details or {})},
             status=PageStatus.DUPLICATE,
             duplicate_of=of_url_id,
         )

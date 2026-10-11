@@ -77,15 +77,21 @@ class PageRepository(Protocol):
         """Persist all fields of an existing page."""
         ...
 
-    def mark_removed(self, url_id: str, run_id: str) -> Page:
-        """Mark a page removed (verified 404/410) and record an event."""
+    def mark_removed(
+        self, url_id: str, run_id: str, details: dict[str, Any] | None = None
+    ) -> Page:
+        """Mark a page removed and record an event (``details`` are added to it)."""
         ...
 
-    def mark_redirected(self, url_id: str, target_url_id: str, run_id: str) -> Page:
+    def mark_redirected(
+        self, url_id: str, target_url_id: str, run_id: str, details: dict[str, Any] | None = None
+    ) -> Page:
         """Mark a page as redirecting to another page and record an event."""
         ...
 
-    def mark_duplicate(self, url_id: str, of_url_id: str, run_id: str) -> Page:
+    def mark_duplicate(
+        self, url_id: str, of_url_id: str, run_id: str, details: dict[str, Any] | None = None
+    ) -> Page:
         """Mark a page as a duplicate of another page and record an event."""
         ...
 

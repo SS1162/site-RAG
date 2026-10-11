@@ -28,6 +28,8 @@ RUN_COUNTERS: tuple[str, ...] = (
     "pages_removed",
     "pages_failed",
     "pages_redirected",
+    "pages_skipped",
+    "pages_orphaned",
 )
 """Names of the per-run page counters."""
 
@@ -51,6 +53,8 @@ class Run:
     pages_removed: int = 0
     pages_failed: int = 0
     pages_redirected: int = 0
+    pages_skipped: int = 0
+    pages_orphaned: int = 0
     abort_reason: str | None = None
 
 
@@ -71,6 +75,7 @@ class Page:
     redirected_to: str | None = None
     content_type: ContentType | None = None
     found_on: str | None = None
+    discovery_depth: int | None = None
     sitemap_lastmod: datetime | None = None
     http_status: int | None = None
     etag: str | None = None

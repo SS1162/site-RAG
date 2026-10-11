@@ -27,6 +27,7 @@ class PageStatus(StrEnum):
     REMOVED = "removed"
     REDIRECTED = "redirected"
     DUPLICATE = "duplicate"
+    SKIPPED = "skipped"
 
 
 class ContentType(StrEnum):
@@ -57,6 +58,8 @@ class EventType(StrEnum):
     FAILED_PERMANENT = "failed_permanent"
     REDIRECTED = "redirected"
     DUPLICATE = "duplicate"
+    ORPHAN = "orphan"
+    SKIPPED = "skipped"
 
 
 INACTIVE_STATUSES: frozenset[PageStatus] = frozenset(
@@ -65,11 +68,12 @@ INACTIVE_STATUSES: frozenset[PageStatus] = frozenset(
         PageStatus.REDIRECTED,
         PageStatus.DUPLICATE,
         PageStatus.FAILED_PERMANENT,
+        PageStatus.SKIPPED,
     }
 )
 """Pages in these statuses are not active and are never selected for processing."""
 
 UNINDEX_STATUSES: frozenset[PageStatus] = frozenset(
-    {PageStatus.REMOVED, PageStatus.REDIRECTED, PageStatus.DUPLICATE}
+    {PageStatus.REMOVED, PageStatus.REDIRECTED, PageStatus.DUPLICATE, PageStatus.SKIPPED}
 )
 """Pages in these statuses must be taken out of the index."""

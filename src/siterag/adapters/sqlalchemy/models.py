@@ -70,6 +70,8 @@ class RunModel(Base):
     pages_removed: Mapped[int] = _counter()
     pages_failed: Mapped[int] = _counter()
     pages_redirected: Mapped[int] = _counter()
+    pages_skipped: Mapped[int] = _counter()
+    pages_orphaned: Mapped[int] = _counter()
     abort_reason: Mapped[str | None] = mapped_column(Text)
 
 
@@ -88,6 +90,7 @@ class PageModel(Base):
     content_type: Mapped[ContentType | None] = mapped_column(_enum(ContentType))
     discovered_via: Mapped[DiscoveredVia] = mapped_column(_enum(DiscoveredVia))
     found_on: Mapped[str | None] = mapped_column(ForeignKey("pages.url_id"))
+    discovery_depth: Mapped[int | None] = mapped_column(Integer)
     sitemap_lastmod: Mapped[datetime | None] = mapped_column(UTCDateTime)
     http_status: Mapped[int | None] = mapped_column(Integer)
     etag: Mapped[str | None] = mapped_column(Text)
