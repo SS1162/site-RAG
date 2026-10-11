@@ -25,3 +25,21 @@ class DiscoveryTooSmallError(SiteRagError):
 
 class RemovalThresholdExceededError(SiteRagError):
     """Too large a share of active pages would be removed in one run."""
+
+
+class RunAbortedError(SiteRagError):
+    """The run must stop; ``reason`` is recorded as the run's ``abort_reason``."""
+
+    reason = "aborted"
+
+
+class RobotsUnavailableError(RunAbortedError):
+    """robots.txt could not be read (5xx or network error), so nothing may be crawled."""
+
+    reason = "robots_unavailable"
+
+
+class CircuitOpenError(RunAbortedError):
+    """The server refused too many consecutive requests (429/403)."""
+
+    reason = "circuit_open"
