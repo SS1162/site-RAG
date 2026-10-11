@@ -12,3 +12,60 @@ failure:
   max_consecutive_failed_runs: 3
 run_lock:
   stale_after_hours: 12
+sitemaps: [https://www.fnx.co.il/sitemap.xml]   # fallback if robots.txt lists none
+seeds: [https://www.fnx.co.il/]
+
+http:
+  user_agent_name: site-rag-hackathon
+  user_agent_version: "0.1"
+  contact_url: "<FILL_ME>"        # repository URL
+  contact_email: "<FILL_ME>"
+  base_delay_s: 1.5
+  jitter_s: 0.5
+  adaptive_factor: 2.0
+  connect_timeout_s: 10
+  read_timeout_s: 30
+  max_redirects: 5
+  accept_language: he
+  max_retries: 3
+  circuit_breaker_threshold: 10
+
+scope:
+  max_link_depth: 2
+  max_pages: 5000
+  max_file_mb: 20
+  allowed_content_types: [text/html, application/pdf]
+  skip_extensions: [.jpg, .jpeg, .png, .gif, .svg, .webp, .ico, .mp4, .mp3, .zip, .rar, .doc, .docx, .xls, .xlsx, .ppt, .pptx, .css, .js]
+  exclude:                       # regex on decoded path; initial list, will be tuned
+    - '^/en/'
+    - '^/404/'
+    - '^/sitemap/$'
+    - '^/tags/'
+    - '-old/$'
+    - '^/investor-relations/'
+    - '^/fnx-insurance-ltd/'
+    - '^/career/'
+    - '^/calculators/'
+    - '/tz[a-z]+/(\d+/)?$'
+    - '(takanon|regulations?|financial-report|finncial-report|quarterly-assets|assets-list|monthly-report|direct-expen|related-parties|management-declarations|yield-components|markivey|merkivey|nehasim|votes-details|expected-investment-policy)'
+
+classification:
+  page_types:                    # ordered, first match wins
+    - { pattern: '/(faq|qa)/', type: faq }
+    - { pattern: '^/claims-customer-service/', type: claims }
+    - { pattern: '^/customer-service/terms-of-use/', type: legal }
+    - { pattern: '^/customer-service/', type: service }
+    - { pattern: '(_information|-information|-info)/|/plan-your-trip/', type: article }
+    - { pattern: '\.pdf$', type: document }
+    - { pattern: '^/(car-insurance|apartment-insurance|mortgage-insurance|travel-insurance|health-insurance|life-insurance|disability-and-incapacity-to-work|truck-insurance|business-insurance|marine_aviation_insurance|other-insurances|savings|ishtalmutfund|gemel|pension_retirement|pension-savings|pets-insurance|loans|business-financing)/', type: product }
+  domains:                       # ordered, first match wins
+    - { pattern: 'car-insurance|claims-car|truck-insurance|/ituran/(garages|appraiser)', domain: car }
+    - { pattern: 'mortgage', domain: mortgage }
+    - { pattern: 'apartment|appartment', domain: apartment }
+    - { pattern: 'travel', domain: travel }
+    - { pattern: 'health|supportive|dental|personal-accident|amboltorein|/ituran/(doctors|dentists|searchdoctors)', domain: health }
+    - { pattern: 'life-insurance|claims-life|disability', domain: life }
+    - { pattern: 'pension|gemel|ishtalmut|savings|takanottashlum', domain: pension_savings }
+    - { pattern: 'pets', domain: pets }
+    - { pattern: 'business-insurance|marine|other-insurances|business-financing|liability', domain: business }
+    - { pattern: 'loans', domain: loans }

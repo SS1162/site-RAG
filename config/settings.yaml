@@ -2,6 +2,8 @@
 data_root: data
 logging: { level: INFO }
 pipeline:
+  # stages run by 'siterag run', in order (each must be registered in container.py)
+  stages: [discover, fetch]
   # stage name -> pages column holding that stage's input hash
   stage_inputs: { extract: raw_hash, chunk: clean_hash, index: chunks_hash }
   # stage name -> version of that stage's logic/config; bump to reprocess

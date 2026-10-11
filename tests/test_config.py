@@ -73,3 +73,19 @@ def test_invalid_trailing_slash_rejected(tmp_path: Path) -> None:
     path = write_profile(tmp_path, "url_normalization: {trailing_slash: sometimes}\n")
     with pytest.raises(ConfigError, match="trailing_slash"):
         load_site_profile(path)
+
+
+def test_invalid_scope_regex_rejected(tmp_path: Path) -> None:
+    path = tmp_path / "demo.yaml"
+    path.write_text(
+        "site_id: demo\nbase_url: https://x.co.il\nsafety: {discovery_min_pages: 1}\n"
+        "scope: {exclude: ['(unclosed']}\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ConfigError, match="scope.exclude"):
+        load_site_profile(path)
+
+
+def test_shipped_pipeline_stages() -> None:
+    settings = load_settings(ROOT / "config" / "settings.yaml")
+    assert settings.pipeline.stages == ["discover", "fetch"]
