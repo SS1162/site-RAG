@@ -48,3 +48,13 @@ def test_entity_fields_match_model_columns(entity: type, model: type) -> None:
     entity_fields = {f.name for f in fields(entity)}
     columns = set(model.__table__.columns.keys())  # type: ignore[attr-defined]
     assert entity_fields == columns
+
+
+def test_stages_depend_on_ports_and_domain_only() -> None:
+    files = list((SRC / "pipeline").rglob("*.py"))
+    assert files
+    for path in files:
+        for module in imported_modules(path):
+            assert not module.startswith(
+                ("sqlalchemy", "alembic", "httpx", "protego", "siterag.adapters")
+            ), f"{path.relative_to(SRC)} imports {module}"

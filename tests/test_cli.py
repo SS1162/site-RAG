@@ -40,3 +40,29 @@ def test_unknown_site_reports_config_error(tmp_path: Path) -> None:
     )
     assert result.exit_code == 2
     assert "not found" in result.output
+
+
+def _opts(tmp_path: Path) -> list[str]:
+    return ["--site", "fnx", "--settings", str(write_settings(tmp_path)),
+            "--sites-dir", str(ROOT / "sites")]
+
+
+def test_report_prints_latest(tmp_path: Path) -> None:
+    opts = _opts(tmp_path)
+    result = runner.invoke(app, ["report", *opts])
+    assert result.exit_code == 1 and "No run report" in result.output
+
+    reports = tmp_path / "data" / "fnx" / "reports"
+    reports.mkdir(parents=True)
+    (reports / "run_20261010T100000Z.md").write_text("# old", encoding="utf-8")
+    (reports / "run_20261011T100000Z.md").write_text("# newest", encoding="utf-8")
+    result = runner.invoke(app, ["report", *opts])
+    assert result.exit_code == 0 and "# newest" in result.output
+
+
+def test_run_rejects_bad_stage_options(tmp_path: Path) -> None:
+    opts = _opts(tmp_path)
+    result = runner.invoke(app, ["run", "--only", "index", *opts])
+    assert result.exit_code == 2 and "Unknown stage" in result.output
+    result = runner.invoke(app, ["run", "--only", "fetch", "--from", "fetch", *opts])
+    assert result.exit_code == 2 and "cannot be used together" in result.output

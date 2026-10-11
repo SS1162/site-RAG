@@ -57,6 +57,12 @@ class FetchStats:
     not_modified: int = 0
     total_elapsed_s: float = 0.0
 
+    def reset(self) -> None:
+        """Start counting again (at the start of each run)."""
+        self.requests = 0
+        self.not_modified = 0
+        self.total_elapsed_s = 0.0
+
     @property
     def avg_response_s(self) -> float:
         """Average response time in seconds (0 when nothing was requested)."""
