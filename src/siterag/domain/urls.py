@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import StrEnum
 from fnmatch import fnmatchcase
 from urllib.parse import parse_qsl, quote, unquote, urlsplit, urlunsplit
 
@@ -16,11 +17,19 @@ _PATH_SAFE = "!$&'()*+,;=:@-._~"
 _QUERY_SAFE = "!$'()*,;:@/?-._~"
 
 
+class TrailingSlash(StrEnum):
+    """How to treat the trailing slash of a path (the root path is always ``/``)."""
+
+    STRIP = "strip"  # remove it
+    KEEP = "keep"  # ensure it, unless the last segment looks like a file (has a dot)
+
+
 @dataclass(frozen=True)
 class UrlNormalizationRules:
     """Site-specific URL normalization settings (from the site profile)."""
 
     strip_www: bool = False
+    trailing_slash: TrailingSlash = TrailingSlash.STRIP
     tracking_params: tuple[str, ...] = DEFAULT_TRACKING_PARAMS
     keep_params: tuple[str, ...] = field(default_factory=tuple)
 
@@ -43,13 +52,18 @@ def _normalize_host(hostname: str, port: int | None, rules: UrlNormalizationRule
     return host
 
 
-def _normalize_path(path: str) -> tuple[str, str]:
-    """Return (encoded, display) path with duplicate slashes and trailing slash removed."""
+def _normalize_path(path: str, trailing_slash: TrailingSlash) -> tuple[str, str]:
+    """Return (encoded, display) path with duplicate slashes collapsed.
+
+    The trailing slash is removed (``strip``) or added unless the last segment looks
+    like a file such as ``guide.pdf`` (``keep``).
+    """
     segments = [unquote(s) for s in path.split("/") if s]
     if not segments:
         return "/", "/"
-    encoded = "/" + "/".join(quote(s, safe=_PATH_SAFE) for s in segments)
-    display = "/" + "/".join(segments)
+    suffix = "/" if trailing_slash == TrailingSlash.KEEP and "." not in segments[-1] else ""
+    encoded = "/" + "/".join(quote(s, safe=_PATH_SAFE) for s in segments) + suffix
+    display = "/" + "/".join(segments) + suffix
     return encoded, display
 
 
@@ -73,8 +87,9 @@ def _normalize_query(query: str, rules: UrlNormalizationRules) -> tuple[str, str
 def normalize_url(raw: str, rules: UrlNormalizationRules) -> NormalizedUrl:
     """Normalize a URL so that equivalent spellings map to the same ``url_id``.
 
-    Forces https, lowercases the host, drops default ports, the fragment, duplicate and
-    trailing slashes, and tracking parameters (or keeps only ``keep_params`` when set).
+    Forces https, lowercases the host, drops default ports, the fragment, duplicate
+    slashes and tracking parameters (or keeps only ``keep_params`` when set), and applies
+    the site's ``trailing_slash`` policy.
     Percent-encoding is decoded and re-applied consistently, so already encoded and raw
     non-ASCII URLs produce the same result without double encoding.
     """
@@ -82,7 +97,7 @@ def normalize_url(raw: str, rules: UrlNormalizationRules) -> NormalizedUrl:
     if not parts.hostname:
         raise ValueError(f"URL has no host: {raw!r}")
     host = _normalize_host(parts.hostname, parts.port, rules)
-    path, path_display = _normalize_path(parts.path)
+    path, path_display = _normalize_path(parts.path, rules.trailing_slash)
     query, query_display = _normalize_query(parts.query, rules)
 
     url = urlunsplit(("https", host, path, query, ""))

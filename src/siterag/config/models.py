@@ -7,7 +7,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from siterag.domain.urls import DEFAULT_TRACKING_PARAMS, UrlNormalizationRules
+from siterag.domain.urls import DEFAULT_TRACKING_PARAMS, TrailingSlash, UrlNormalizationRules
 
 
 class _Strict(BaseModel):
@@ -48,6 +48,7 @@ class UrlNormalizationConfig(_Strict):
     """URL normalization section of a site profile."""
 
     strip_www: bool = False
+    trailing_slash: TrailingSlash = TrailingSlash.STRIP
     tracking_params: list[str] = Field(default_factory=lambda: list(DEFAULT_TRACKING_PARAMS))
     keep_params: list[str] = Field(default_factory=list)
 
@@ -55,6 +56,7 @@ class UrlNormalizationConfig(_Strict):
         """Convert to the domain rules object."""
         return UrlNormalizationRules(
             strip_www=self.strip_www,
+            trailing_slash=self.trailing_slash,
             tracking_params=tuple(self.tracking_params),
             keep_params=tuple(self.keep_params),
         )

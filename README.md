@@ -173,6 +173,7 @@ checked when the Unit of Work is built.
    base_url: https://www.example.com
    url_normalization:
      strip_www: false
+     trailing_slash: strip      # strip | keep
      tracking_params: [utm_*, fbclid, gclid]
      keep_params: []            # if non-empty, only these query params are kept
    safety: { removal_max_ratio: 0.15, discovery_min_pages: 50 }
@@ -188,7 +189,14 @@ Each site gets its own database, so sites cannot affect each other.
 `normalize_url(raw, rules)` does the following:
 
 - forces `https`, lowercases the host, drops default ports and the `#fragment`;
-- collapses duplicate slashes and removes the trailing slash (except for `/`);
+- collapses duplicate slashes and applies the site's `trailing_slash` policy:
+  - `strip` (default) removes the trailing slash; the root `/` is kept.
+  - `keep` makes every path end with `/`, except when the last segment looks like a file
+    (contains a dot, such as `guide.pdf`). Note that a directory name containing a dot
+    (`/v1.2`) also counts as a file.
+
+  Changing this setting changes the `url_id` of most pages, so set it before the first
+  real run of a site;
 - drops tracking parameters (glob patterns such as `utm_*`), or keeps only `keep_params`
   when set, then sorts parameters by name.
 

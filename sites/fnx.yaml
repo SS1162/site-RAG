@@ -2,6 +2,7 @@ site_id: fnx
 base_url: https://www.fnx.co.il
 url_normalization:
   strip_www: false
+  trailing_slash: keep     # strip | keep
   tracking_params: [utm_*, fbclid, gclid, mc_cid, mc_eid, _ga]
   keep_params: []          # filled after site mapping
 safety:

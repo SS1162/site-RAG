@@ -4,6 +4,7 @@ import pytest
 
 from siterag.config.loader import load_settings, load_site_profile
 from siterag.domain.errors import ConfigError
+from siterag.domain.urls import TrailingSlash
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -14,7 +15,9 @@ def test_shipped_config_files_are_valid() -> None:
     assert settings.pipeline.versions["fetch"] == "1"
     profile = load_site_profile(ROOT / "sites" / "fnx.yaml")
     assert profile.site_id == "fnx"
-    assert profile.url_normalization.to_rules().strip_www is False
+    rules = profile.url_normalization.to_rules()
+    assert rules.strip_www is False
+    assert rules.trailing_slash == TrailingSlash.KEEP
 
 
 def test_unknown_key_fails_with_clear_message(tmp_path: Path) -> None:
@@ -49,3 +52,24 @@ def test_site_id_must_match_file_name(tmp_path: Path) -> None:
 def test_missing_file(tmp_path: Path) -> None:
     with pytest.raises(ConfigError, match="not found"):
         load_settings(tmp_path / "nope.yaml")
+
+
+def write_profile(tmp_path: Path, url_normalization: str) -> Path:
+    path = tmp_path / "demo.yaml"
+    path.write_text(
+        "site_id: demo\nbase_url: https://x.co.il\nsafety: {discovery_min_pages: 1}\n"
+        + url_normalization,
+        encoding="utf-8",
+    )
+    return path
+
+
+def test_trailing_slash_defaults_to_strip(tmp_path: Path) -> None:
+    profile = load_site_profile(write_profile(tmp_path, ""))
+    assert profile.url_normalization.to_rules().trailing_slash == TrailingSlash.STRIP
+
+
+def test_invalid_trailing_slash_rejected(tmp_path: Path) -> None:
+    path = write_profile(tmp_path, "url_normalization: {trailing_slash: sometimes}\n")
+    with pytest.raises(ConfigError, match="trailing_slash"):
+        load_site_profile(path)

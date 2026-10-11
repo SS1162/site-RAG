@@ -2,9 +2,10 @@ from urllib.parse import quote
 
 import pytest
 
-from siterag.domain.urls import UrlNormalizationRules, normalize_url
+from siterag.domain.urls import TrailingSlash, UrlNormalizationRules, normalize_url
 
-RULES = UrlNormalizationRules()
+RULES = UrlNormalizationRules(trailing_slash=TrailingSlash.STRIP)
+KEEP = UrlNormalizationRules(trailing_slash=TrailingSlash.KEEP)
 HEBREW = "https://www.fnx.co.il/ביטוח-דירה"
 ENCODED = "https://www.fnx.co.il/" + quote("ביטוח-דירה")
 
@@ -84,3 +85,56 @@ def test_non_default_port_kept() -> None:
 def test_missing_host_rejected() -> None:
     with pytest.raises(ValueError):
         normalize_url("/relative/path", RULES)
+
+
+def test_strip_is_the_default() -> None:
+    assert UrlNormalizationRules().trailing_slash == TrailingSlash.STRIP
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        HEBREW,
+        ENCODED,
+        HEBREW + "/",
+        HEBREW + "?utm_source=facebook",
+        HEBREW + "#שאלות",
+        ENCODED + "/?utm_source=facebook&fbclid=x#%D7%A9",
+        "http://WWW.FNX.CO.IL:443//ביטוח-דירה//",
+    ],
+)
+def test_keep_mode_equivalent_urls_share_url_id(raw: str) -> None:
+    result = normalize_url(raw, KEEP)
+    assert result.url == ENCODED + "/"
+    assert result.url_display == HEBREW + "/"
+    assert result.url_id == normalize_url(HEBREW + "/", KEEP).url_id
+
+
+def test_keep_mode_adds_slash_before_query() -> None:
+    result = normalize_url("https://x.co.il/a/b?z=1&a=2", KEEP)
+    assert result.url == "https://x.co.il/a/b/?a=2&z=1"
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        ("https://x.co.il/docs/guide.pdf", "https://x.co.il/docs/guide.pdf"),
+        ("https://x.co.il/docs/guide.pdf/", "https://x.co.il/docs/guide.pdf"),
+        ("https://x.co.il/index.html", "https://x.co.il/index.html"),
+        ("https://x.co.il/files.d/report", "https://x.co.il/files.d/report/"),
+    ],
+)
+def test_keep_mode_file_like_last_segment_has_no_slash(raw: str, expected: str) -> None:
+    assert normalize_url(raw, KEEP).url == expected
+
+
+def test_keep_mode_root_and_no_double_encoding() -> None:
+    assert normalize_url("https://x.co.il", KEEP).url == "https://x.co.il/"
+    assert normalize_url("https://x.co.il/", KEEP).url == "https://x.co.il/"
+    once = normalize_url(HEBREW, KEEP)
+    assert normalize_url(once.url, KEEP).url == once.url
+    assert "%25" not in once.url
+
+
+def test_modes_give_different_url_ids() -> None:
+    assert normalize_url(HEBREW, KEEP).url_id != normalize_url(HEBREW, RULES).url_id
