@@ -1,0 +1,13 @@
+site_id: fnx
+base_url: https://www.fnx.co.il
+url_normalization:
+  strip_www: false
+  tracking_params: [utm_*, fbclid, gclid, mc_cid, mc_eid, _ga]
+  keep_params: []          # filled after site mapping
+safety:
+  removal_max_ratio: 0.15
+  discovery_min_pages: 50
+failure:
+  max_consecutive_failed_runs: 3
+run_lock:
+  stale_after_hours: 12

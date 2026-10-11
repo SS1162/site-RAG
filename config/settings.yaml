@@ -1,0 +1,8 @@
+# Global settings shared by all sites.
+data_root: data
+logging: { level: INFO }
+pipeline:
+  # stage name -> pages column holding that stage's input hash
+  stage_inputs: { extract: raw_hash, chunk: clean_hash, index: chunks_hash }
+  # stage name -> version of that stage's logic/config; bump to reprocess
+  versions: { fetch: "1", extract: "1", chunk: "1", index: "bge-m3:1" }

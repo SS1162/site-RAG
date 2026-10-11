@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "siterag"
+version = "0.1.0"
+description = "RAG chatbot over a single public website - ingestion pipeline persistence layer"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "sqlalchemy>=2.0,<2.1",
+    "alembic>=1.13",
+    "pydantic>=2.6,<3",
+    "pyyaml>=6.0",
+    "typer>=0.12",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+siterag = "siterag.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
