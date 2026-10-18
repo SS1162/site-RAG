@@ -19,7 +19,7 @@ http:
   user_agent_name: site-rag-hackathon
   user_agent_version: "0.1"
   contact_url: "<FILL_ME>"        # repository URL
-  contact_email: "<FILL_ME>"
+  contact_email: "ss058329162@gmail.com"
   base_delay_s: 1.5
   jitter_s: 0.5
   adaptive_factor: 2.0
